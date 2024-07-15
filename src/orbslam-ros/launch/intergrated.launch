@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Include node1.launch -->
+    <include file="$(find orbslam-ros)/launch/Mono.launch">
+    <!-- Add any arguments if needed -->
+    </include>
+  
+    <!-- Include node2.launch -->
+    <!--include file="$(find pcd2pgm)/launch/run.launch">
+    </include-->
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" />
+
+
+</launch>

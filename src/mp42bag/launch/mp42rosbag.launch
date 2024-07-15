@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="mp42bag" type="mp42bag_node" name="mp42bag" output="screen">
+        <param name="path_mp4" value="/mnt/test.mp4"/>
+        <param name="path_bag" value="/mnt/test.bag"/>
+        <param name="topic_advertise_" value="/camera/image_raw"/>
+        <param name="frame_id" value="camera_frame"/>
+        <param name="compress_type" value="jpg"/>
+    </node>
+</launch>

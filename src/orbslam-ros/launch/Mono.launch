@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="Mono_image_topic" default="/camera/color/image_raw"/>
+    <arg name="path_to_vocabulary" default="/root/ORB_SLAM2/Vocabulary/ORBvoc.txt"/>
+    <arg name="path_to_settings" default="/root/catkin_ws/src/orbslam-ros/launch/Redmi_logger_480.yaml"/>
+
+    <node pkg="orbslam-ros" type="Mono" name="Mono_example" output="screen">
+        <param name="Mono_image_topic" value="$(arg Mono_image_topic)"/>
+        <param name="path_to_vocabulary" value="$(arg path_to_vocabulary)"/>
+        <param name="path_to_settings" value="$(arg path_to_settings)"/>
+    </node>
+
+</launch>

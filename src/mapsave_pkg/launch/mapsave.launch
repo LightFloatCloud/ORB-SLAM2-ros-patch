@@ -1,0 +1,10 @@
+<launch>
+
+		  
+		<!-- <node name="map_server" pkg="map_server" type="map_server" />-->
+	    <!--<arg name="filename" value="/home/zzj/My_ws/berth_ws/src/FAST_LIO/PCD/" />   --> 
+		<node name="mapsave" pkg="mapsave" type="map_saver_node" />
+
+
+
+</launch>

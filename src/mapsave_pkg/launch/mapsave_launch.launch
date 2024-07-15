@@ -1,0 +1,6 @@
+<launch>
+
+<node name="mapsave" pkg="mapsave_pkg" type="map_saver_node" />
+
+
+</launch>
