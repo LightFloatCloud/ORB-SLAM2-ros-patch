@@ -130,19 +130,22 @@ int main(int argc, char **argv)
     ofstream f;
     f.open(filename.c_str());
     f << fixed;
-    f << "Pos_x,Pos_y,Pos_z," << "NormalVec_0,NormalVec_1,NormalVec_2," << "Observations,isBad,GetFound,minDis,maxDis" << endl;
-    for(auto pSinglePoint:all_points) {
+    f << "Pos_x,Pos_y,Pos_z," << "NormalVec_0,NormalVec_1,NormalVec_2," << "Observations,isBad,GetFound,isGround," << "minDis,maxDis" << endl;
+    for(auto& pSinglePoint:all_points) {
         cv::Mat pos = pSinglePoint->GetWorldPos();
         cv::Mat norm = pSinglePoint->GetNormal();
         int obs = pSinglePoint->Observations();
         bool bad = pSinglePoint->isBad();
         int mnFound = pSinglePoint->GetFound();
+        bool bGround = pSinglePoint->mbGround;
+
         float minDis = pSinglePoint->GetMinDistanceInvariance()/0.8f;
         float maxDis = pSinglePoint->GetMaxDistanceInvariance()/1.2f;
 
         f << setprecision(8) << pos.at<float>(0) << "," << pos.at<float>(1) << "," << pos.at<float>(2) << ","
             << norm.at<float>(0) << "," << norm.at<float>(1) << "," << norm.at<float>(2) << "," 
-            << obs << "," << std::noboolalpha << bad << "," << mnFound << "," << minDis << "," << maxDis << endl;
+            << obs << "," << std::noboolalpha << bad << "," << mnFound << "," << bGround << ","
+            << minDis << "," << maxDis << endl;
         
     }
     //关闭文件
@@ -235,31 +238,7 @@ sensor_msgs::PointCloud2 PreparePointCloud2Message(const std::string &frame_id, 
 
 void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 {
-// sensor_msgs::PointCloud2 cloud_msg;
-// // 设置 ROS 点云消息的帧 ID
-// cloud_msg.header.frame_id = "map"; // 设置为地图坐标系
-// // 设置 ROS 点云消息的时间戳
-// cloud_msg.header.stamp = ros::Time::now(); // 使用当前时间戳
-// cloud_msg.width = 100; // 设置点云宽度
-// cloud_msg.height = 1; // 设置点云高度
-// cloud_msg.is_dense = true; // 设置点云是否稠密
 
-// // 设置点云数据
-// sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
-// modifier.setPointCloud2FieldsByString(1, "xyz");
-// modifier.resize(100); // 设置点云大小为100
-// for (size_t i = 0; i < cloud_msg.width; ++i) {
-//     // 随机生成点的坐标和颜色
-//     float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-//     float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-//     float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-
-//     // 填充点云数据
-//     int offset = i * cloud_msg.point_step;
-//     memcpy(&cloud_msg.data[offset + 0], &x, sizeof(float)); // x
-//     memcpy(&cloud_msg.data[offset + 4], &y, sizeof(float)); // y
-//     memcpy(&cloud_msg.data[offset + 8], &z, sizeof(float)); // z
-// }
 
     // 可以直接获取 std::set<MapPoint*> mspMapPoints;
     vector<ORB_SLAM2::MapPoint*>&& all_points = pSLAM->mpMap->GetAllMapPoints();
