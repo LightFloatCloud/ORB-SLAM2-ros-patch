@@ -8,6 +8,7 @@
         <param name="topic_advertise" value="/camera/color/image_raw"/>
         <param name="frame_id" value="camera_frame"/>
         <param name="Bool_restart" value="false"/>
+        <param name="Bool_Info_show" value="false"/>
     </node>
 </launch>
 

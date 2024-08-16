@@ -9,6 +9,10 @@
     <!--include file="$(find pcd2pgm)/launch/run.launch">
     </include-->
 
+    <include file="$(find mp42bag)/launch/mp42topic.launch">
+    <!-- Add any arguments if needed -->
+    </include>
+
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" />
 
 

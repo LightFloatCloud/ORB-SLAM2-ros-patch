@@ -28,11 +28,13 @@ int main(int argc, char** argv)
     string topic_advertise_;
     string frame_id_;
     bool Bool_restart_;
+    bool Bool_Info_show_;
     
     nh.param<std::string>("path_mp4", path_mp4_, "1.mp4");
     nh.param<std::string>("topic_advertise", topic_advertise_, "/camera/image_raw");
     nh.param<std::string>("frame_id", frame_id_, "camera_frame");
     nh.param<bool>("Bool_restart", Bool_restart_, false);
+    nh.param<bool>("Bool_Info_show", Bool_Info_show_, false);
 
     // Read a mp4
     cv::VideoCapture cap(path_mp4_);
@@ -79,7 +81,8 @@ int main(int argc, char** argv)
         image_pub.publish(img_msg);
         
         // 输出帧数
-        ROS_INFO("Frame %d published.", frame_id);
+        if(Bool_Info_show_ == true)
+            ROS_INFO("Frame %d published.", frame_id);
         frame_id++;
 
         ros::spinOnce();
