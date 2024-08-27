@@ -42,8 +42,8 @@ using namespace std;
 int frame_num = 0;
 ros::Publisher pub;
 
-sensor_msgs::PointCloud2 PreparePointCloud2Message(const std::string &, const int);
-void publish_pointcloud(const ORB_SLAM2::System* pSLAM);
+// sensor_msgs::PointCloud2 PreparePointCloud2Message(const std::string &, const int);
+// void publish_pointcloud(const ORB_SLAM2::System* pSLAM);
 
 
 
@@ -195,11 +195,11 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     std::cout << "-- GrabImage cost: " << duration.count() << " ms." << std::endl;
 
 
-    start_time = std::chrono::high_resolution_clock::now();
-    publish_pointcloud(mpSLAM);
-    end_time = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "-- Publish cost: " << duration.count() << " ms." << std::endl;
+    // start_time = std::chrono::high_resolution_clock::now();
+    // publish_pointcloud(mpSLAM);
+    // end_time = std::chrono::high_resolution_clock::now();
+    // duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    // std::cout << "-- Publish cost: " << duration.count() << " ms." << std::endl;
 
 
 
@@ -207,7 +207,7 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
 }
 
-
+/*
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const std::string &frame_id, const int num_points)
 {
     sensor_msgs::PointCloud2 msg;
@@ -302,6 +302,6 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     }
     pub.publish(msg);
 }
-
+*/
 
 
