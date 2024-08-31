@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="dataname" value="rgbd_dataset_freiburg2_pioneer_slam2"/>
+    
+
     <!-- Include node1.launch -->
     <include file="$(find orbslam-ros)/launch/Mono.launch">
-    <!-- Add any arguments if needed -->
+        <arg name="path_to_settings" value="/mnt/d/WslSystem/share/dataset/config/$(arg dataname).yaml"/>
+        <arg name="path_to_output" value="/mnt/d/WslSystem/share/dataset/output/$(arg dataname)/"/>
     </include>
   
     <!-- Include node2.launch -->
@@ -10,10 +14,11 @@
     </include-->
 
     <include file="$(find mp42bag)/launch/mp42topic.launch">
-    <!-- Add any arguments if needed -->
+        <arg name="video_path" value="/mnt/d/WslSystem/share/dataset/$(arg dataname).mp4"/>
+        <arg name="info_show" value="false"/>
     </include>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" />
+    <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" /-->
 
 
 </launch>

@@ -3,11 +3,13 @@
     <arg name="Mono_image_topic" default="/camera/color/image_raw"/>
     <arg name="path_to_vocabulary" default="/root/ORB_SLAM2/Vocabulary/ORBvoc.bin"/>
     <arg name="path_to_settings" default="/root/catkin_ws/src/orbslam-ros/launch/Redmi_logger_480.yaml"/>
+    <arg name="path_to_output" default="/root/assets/"/>
 
     <node pkg="orbslam-ros" type="Mono" name="Mono_example" output="screen">
         <param name="Mono_image_topic" value="$(arg Mono_image_topic)"/>
         <param name="path_to_vocabulary" value="$(arg path_to_vocabulary)"/>
         <param name="path_to_settings" value="$(arg path_to_settings)"/>
+        <param name="path_to_output" value="$(arg path_to_output)"/>
     </node>
 
 </launch>

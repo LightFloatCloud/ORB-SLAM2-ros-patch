@@ -1,14 +1,17 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="video_path" default="/data/test0229.mp4"/>
+    <arg name="info_show" default="true"/>
+
     <node pkg="mp42bag" type="mp42topic_node" name="mp42topic" output="screen">
         <!--param name="path_mp4" value="/mnt/d/WslSystem/sharefiles/video90/newfiles/calimp4.mp4"/-->
         <!--param name="path_mp4" value="/data/1025.mp4"/-->
         <!--param name="path_mp4" value="/data/1025.mp4"/-->
-        <param name="path_mp4" value="/data/test0229.mp4"/>
+        <param name="path_mp4" value="$(arg video_path)"/>
         <param name="topic_advertise" value="/camera/color/image_raw"/>
         <param name="frame_id" value="camera_frame"/>
         <param name="Bool_restart" value="false"/>
-        <param name="Bool_Info_show" value="false"/>
+        <param name="Bool_Info_show" value="$(arg info_show)"/>
     </node>
 </launch>
 
