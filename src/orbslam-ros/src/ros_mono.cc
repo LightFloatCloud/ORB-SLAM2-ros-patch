@@ -121,8 +121,10 @@ int main(int argc, char **argv)
 
     ros::spin();
 
+    string path_to_output_;
+    nodeHandler.param<string>("path_to_output", path_to_output_, "/root/assets/");
 
-    string filename = "/root/catkin_ws/Points.csv";
+    string filename = path_to_output_ + "Points.csv";
     //获取地图中的所有地图点
     vector<ORB_SLAM2::MapPoint*> all_points = SLAM.mpMap->GetAllMapPoints();
     cout << endl << "Saving Map Point to " << filename  << endl;
@@ -160,7 +162,8 @@ int main(int argc, char **argv)
     SLAM.Shutdown();
 
     // Save camera trajectory
-    SLAM.SaveKeyFrameTrajectoryTUM("/root/catkin_ws/KeyFrameTrajectory.txt");
+    filename = path_to_output_ + "KeyFrameTrajectory.txt";
+    SLAM.SaveKeyFrameTrajectoryTUM(filename);
 
     ros::shutdown();
 
