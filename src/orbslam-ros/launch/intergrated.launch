@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="dataname" value="rgbd_dataset_freiburg2_pioneer_slam2"/>
-    
+    <arg name="dataname" value="rgbd_dataset_freiburg1_floor"/>
+    <!-- V1_01_easy -->
+    <!-- V2_01_easy -->
+    <!-- rgbd_dataset_freiburg1_floor -->
+    <!-- rgbd_dataset_freiburg2_pioneer_slam -->
 
     <!-- Include node1.launch -->
     <include file="$(find orbslam-ros)/launch/Mono.launch">

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="video_path" default="/data/test0229.mp4"/>
+    <!--arg name="video_path" default="/data/test0229.mp4"/-->
+    <arg name="video_path" default="/mnt/d/WslSystem/share/dataset/rgbd_dataset_freiburg1_floor.mp4"/>
     <arg name="info_show" default="true"/>
 
     <node pkg="mp42bag" type="mp42topic_node" name="mp42topic" output="screen">
