@@ -5,7 +5,7 @@
     
     <arg name="path_to_vocabulary" default="/root/ORB_SLAM2/Vocabulary/ORBvoc.bin"/>
     <arg name="path_to_settings" default="/root/catkin_ws/src/orbslam-ros/launch/normal.yaml"/>
-    <arg name="path_to_output" default="/root/assets/"/>
+    <arg name="path_to_output" default="/mnt/d/WslSystem/share/dataset/output/normal/"/>
 
     <node pkg="orbslam-ros" type="Mono" name="Mono_example" output="screen">
         <param name="Mono_image_topic" value="$(arg Mono_image_topic)"/>

@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="dataname" value="rgbd_dataset_freiburg1_floor"/>
+    <arg name="dataname" value="office"/>
     <!-- V1_01_easy -->
     <!-- V2_01_easy -->
     <!-- rgbd_dataset_freiburg1_floor -->
     <!-- rgbd_dataset_freiburg2_pioneer_slam -->
+    <!-- office -->
+    <!-- library_front -->
+    <!-- library_hall -->
+    <!-- library_passageway -->
+    <!-- calib_narrowGamma_scene1 -->
 
     <!-- Include node1.launch -->
     <include file="$(find orbslam-ros)/launch/Mono.launch">
