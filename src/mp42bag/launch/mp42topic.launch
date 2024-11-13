@@ -13,6 +13,7 @@
         <param name="frame_id" value="camera_frame"/>
         <param name="Bool_restart" value="false"/>
         <param name="Bool_Info_show" value="$(arg info_show)"/>
+        <param name="Output_FrameRate" value="30.0"/>
     </node>
 </launch>
 
