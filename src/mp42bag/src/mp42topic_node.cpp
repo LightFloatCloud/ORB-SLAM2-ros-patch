@@ -46,8 +46,10 @@ int main(int argc, char** argv)
 
     image_transport::Publisher image_pub = it.advertise(topic_advertise_, 1);
 
-
-    double frameRate = cap.get(cv::CAP_PROP_FPS);
+    double frameRate;
+    nh.param<double>("Output_FrameRate", frameRate, 0.0);
+    if(frameRate == 0.0)
+        frameRate = cap.get(cv::CAP_PROP_FPS);
     ros::Rate loop_rate(frameRate);
 
     cv::Mat frame;
