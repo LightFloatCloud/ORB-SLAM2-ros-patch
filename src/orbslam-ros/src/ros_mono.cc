@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
 
 
-    int last_frame_num = frame_num;
+    // int last_frame_num = frame_num;
 
 // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
 
@@ -132,7 +132,8 @@ int main(int argc, char **argv)
     ofstream f;
     f.open(filename.c_str());
     f << fixed;
-    f << "Pos_x,Pos_y,Pos_z," << "NormalVec_0,NormalVec_1,NormalVec_2," << "Observations,isBad,GetFound,isGround," << "minDis,maxDis" << endl;
+    f << "Pos_x,Pos_y,Pos_z," << "NormalVec_0,NormalVec_1,NormalVec_2," << "Observations,isBad,GetFound,isGround," 
+        << "minDis,maxDis," << "mnId,mnFirstKFid,mnFirstFrame,mnTrackReferenceForFrame,mnLastFrameSeen" << endl;
     for(auto& pSinglePoint:all_points) {
         cv::Mat pos = pSinglePoint->GetWorldPos();
         cv::Mat norm = pSinglePoint->GetNormal();
@@ -147,7 +148,9 @@ int main(int argc, char **argv)
         f << setprecision(8) << pos.at<float>(0) << "," << pos.at<float>(1) << "," << pos.at<float>(2) << ","
             << norm.at<float>(0) << "," << norm.at<float>(1) << "," << norm.at<float>(2) << "," 
             << obs << "," << std::noboolalpha << bad << "," << mnFound << "," << bGround << ","
-            << minDis << "," << maxDis << endl;
+            << minDis << "," << maxDis << ","
+            << pSinglePoint->mnId << "," << pSinglePoint->mnFirstKFid << "," << pSinglePoint->mnFirstFrame << "," 
+            << pSinglePoint->mnTrackReferenceForFrame << "," << pSinglePoint->mnLastFrameSeen << endl;
         
     }
     //关闭文件
@@ -195,7 +198,7 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     // debug 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "-- GrabImage cost: " << duration.count() << " ms." << std::endl;
+    std::cout << "-- GrabImage cost: " << duration.count() << " ms." << std::endl<< std::endl;
 
 
     // start_time = std::chrono::high_resolution_clock::now();
