@@ -198,7 +198,7 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     // debug 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "-- GrabImage cost: " << duration.count() << " ms." << std::endl<< std::endl;
+    std::cout << "-- GrabImage cost: " << duration.count() << " ms." << std::endl;
 
 
     start_time = std::chrono::high_resolution_clock::now();
@@ -208,7 +208,7 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     std::cout << "-- Publish cost: " << duration.count() << " ms." << std::endl;
 
 
-
+    std::cout << std::endl;
 
 
 }
