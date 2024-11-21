@@ -13,8 +13,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   
-  pcl_ros
-  pcl_conversions 
+  # pcl_ros
+  # pcl_conversions 
+  tf2_ros
+  tf2
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -37,7 +40,7 @@ find_package(PCL REQUIRED)
 catkin_package(
  INCLUDE_DIRS
  LIBRARIES
- CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs
+ CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs tf2_ros tf2 geometry_msgs
  DEPENDS
 )
 ###########

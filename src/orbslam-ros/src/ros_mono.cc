@@ -29,13 +29,14 @@
 
 
 #include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h> // 用于将 PCL 点云转换为 ROS 点云消息
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 
 #include<opencv2/core/core.hpp>
 
 #include "System.h"
+#include "Converter.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ ros::Publisher pub;
 
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const std::string &, const int);
 void publish_pointcloud(const ORB_SLAM2::System* pSLAM);
-
+void publish_Pose(const ORB_SLAM2::System* pSLAM);
 
 
 class ImageGrabber
@@ -203,6 +204,7 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
     start_time = std::chrono::high_resolution_clock::now();
     publish_pointcloud(mpSLAM);
+    publish_Pose(mpSLAM);
     end_time = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "-- Publish cost: " << duration.count() << " ms." << std::endl;
@@ -246,9 +248,9 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 {
 
 
-    // 可以直接获取 std::set<MapPoint*> mspMapPoints;
-    vector<ORB_SLAM2::MapPoint*>&& all_points = pSLAM->mpMap->GetAllMapPoints();
-    if(!all_points.size())
+    // 可以直接获取 std::set<MapPoint*> mspMapPoints;    pSLAM->mpMap->GetReferenceMapPoints()
+    vector<ORB_SLAM2::MapPoint*>& all_points = pSLAM->mpTracker->mCurrentFrame.mvpMapPoints;
+    if(!all_points.size() || pSLAM->mpMap->mspGroundPoints.size() < 200)
         return;
 
     cv::Mat Normal = pSLAM->mpMap->mvGroundPlaneNormal;
@@ -279,27 +281,27 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     Pn0.copyTo(T.col(3).rowRange(0,3));
     cv::Mat T_inv = T.inv();
 
-    // // Calculate P2 using transformation matrix T
-    // P2 = T * R * P1.t();
-
     // Calculate PP2 using rotation matrix R and translation vector T
     cv::Mat PP1, PP2;
     PP2 = (cv::Mat_<float>(4, 1) << 0, 0, 0, 1);
     PP1 = R.t() * (T_inv * PP2);
-    cout << "-- height: " << PP1.at<float>(2) << endl;; // 当前相机高度
+    cout << "-- height: " << PP1.at<float>(2) << endl; // 当前相机高度
 
-    auto msg = PreparePointCloud2Message("map", all_points.size());
+    // static const float scale = 0.9 / norm(Pn0);
+    // cout << "-- scale: " << scale << endl;; // 当前缩放尺度
+
+    auto msg = PreparePointCloud2Message("camera", all_points.size());
     ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
 
 
     for (const auto &temp_point : all_points)
     {
         // && !temp_point->mbGround
-        if(!temp_point->isBad() && !temp_point->mbGround) {
+        if(temp_point && !temp_point->isBad() && !temp_point->mbGround) {
             cv::Mat new_point;
             vconcat(temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
-            new_point = R.t() * (T_inv * new_point);
-
+            // new_point = R.t() * (T_inv * new_point);
+            new_point =  pSLAM->mpTracker->mCurrentFrame.mTcw * new_point;
 
             stream.next(new_point.at<float>(0));
             stream.next(new_point.at<float>(1));
@@ -307,7 +309,77 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
         }
     }
     pub.publish(msg);
+
+
+
+
+
+    static tf2_ros::TransformBroadcaster tf_broadcaster;
+    vector<float> q = ORB_SLAM2::Converter::toQuaternion(R);
+
+    geometry_msgs::TransformStamped transform_stamped;
+    transform_stamped.header.stamp = ros::Time::now();
+    transform_stamped.header.frame_id = "base";
+    transform_stamped.child_frame_id = "map";
+    transform_stamped.transform.translation.x = Pn0.at<float>(0);
+    transform_stamped.transform.translation.y = Pn0.at<float>(1);
+    transform_stamped.transform.translation.z = Pn0.at<float>(2);
+    transform_stamped.transform.rotation.x = q[0];
+    transform_stamped.transform.rotation.y = q[1];
+    transform_stamped.transform.rotation.z = q[2];
+    transform_stamped.transform.rotation.w = q[3];
+
+    // 广播变换
+    tf_broadcaster.sendTransform(transform_stamped);
+
 }
 
+void publish_Pose(const ORB_SLAM2::System* pSLAM)
+{
+    // vector<ORB_SLAM2::MapPoint*>& all_points = pSLAM->mpTracker->mCurrentFrame.mvpMapPoints;
+    // if(!all_points.size() || pSLAM->mpMap->mspGroundPoints.size() < 200)
+    //     return;
+
+    
+    static tf2_ros::TransformBroadcaster tf_broadcaster;
+
+    ORB_SLAM2::Tracking* tracker = pSLAM->mpTracker;
+    if (!tracker || tracker->mState != ORB_SLAM2::Tracking::OK)
+        return;
+    cv::Mat t = tracker->mCurrentFrame.GetCameraCenter();
+    cv::Mat R = tracker->mCurrentFrame.GetRotationInverse();
+    
+    //抽取旋转部分和平移部分，前者使用四元数表示
+    vector<float> q = ORB_SLAM2::Converter::toQuaternion(R);
+
+    // 创建一个变换
+    // 设置旋转矩阵
+    // tf2::Matrix3x3 rotation_matrix(
+    //     R.at<float>(0, 0), R.at<float>(0, 1), R.at<float>(0, 2),
+    //     R.at<float>(1, 0), R.at<float>(1, 1), R.at<float>(1, 2),
+    //     R.at<float>(2, 0), R.at<float>(2, 1), R.at<float>(2, 2)
+    // );
+    // transform.setBasis(rotation_matrix);
+    // tf2::Transform transform;
+    // transform.setOrigin(tf2::Vector3(t.at<float>(0), t.at<float>(1), t.at<float>(2)));
+    
+    // 创建一个变换消息
+    geometry_msgs::TransformStamped transform_stamped;
+    transform_stamped.header.stamp = ros::Time::now();
+    transform_stamped.header.frame_id = "base";
+    transform_stamped.child_frame_id = "camera";
+    transform_stamped.transform.translation.x = t.at<float>(0);
+    transform_stamped.transform.translation.y = t.at<float>(1);
+    transform_stamped.transform.translation.z = t.at<float>(2);
+    transform_stamped.transform.rotation.x = q[0];
+    transform_stamped.transform.rotation.y = q[1];
+    transform_stamped.transform.rotation.z = q[2];
+    transform_stamped.transform.rotation.w = q[3];
+
+    // 广播变换
+    tf_broadcaster.sendTransform(transform_stamped);
+
+
+}
 
 
