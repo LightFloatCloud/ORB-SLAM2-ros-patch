@@ -250,7 +250,7 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 
     // 可以直接获取 std::set<MapPoint*> mspMapPoints;    pSLAM->mpMap->GetReferenceMapPoints()
     vector<ORB_SLAM2::MapPoint*>& all_points = pSLAM->mpTracker->mCurrentFrame.mvpMapPoints;
-    if(!all_points.size() || pSLAM->mpMap->mspGroundPoints.size() < 200)
+    if(!all_points.size() || pSLAM->mpMap->mspGroundPoints.size() < 500)
         return;
 
     cv::Mat Normal = pSLAM->mpMap->mvGroundPlaneNormal;
@@ -294,10 +294,11 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
 
 
-    for (const auto &temp_point : all_points)
+    for (const auto &temp_point : all_points) 
     {
         // && !temp_point->mbGround
-        if(temp_point && !temp_point->isBad() && !temp_point->mbGround) {
+        // TODO 别再发000点了
+        if(temp_point && !temp_point->isBad() && !temp_point->mbGround && temp_point->Observations()>= 4) {
             cv::Mat new_point;
             vconcat(temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
             // new_point = R.t() * (T_inv * new_point);
@@ -319,7 +320,7 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 
     geometry_msgs::TransformStamped transform_stamped;
     transform_stamped.header.stamp = ros::Time::now();
-    transform_stamped.header.frame_id = "base";
+    transform_stamped.header.frame_id = "initial";
     transform_stamped.child_frame_id = "map";
     transform_stamped.transform.translation.x = Pn0.at<float>(0);
     transform_stamped.transform.translation.y = Pn0.at<float>(1);
@@ -366,7 +367,7 @@ void publish_Pose(const ORB_SLAM2::System* pSLAM)
     // 创建一个变换消息
     geometry_msgs::TransformStamped transform_stamped;
     transform_stamped.header.stamp = ros::Time::now();
-    transform_stamped.header.frame_id = "base";
+    transform_stamped.header.frame_id = "initial";
     transform_stamped.child_frame_id = "camera";
     transform_stamped.transform.translation.x = t.at<float>(0);
     transform_stamped.transform.translation.y = t.at<float>(1);

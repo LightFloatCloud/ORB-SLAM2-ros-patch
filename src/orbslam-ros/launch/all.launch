@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Include node1.launch -->
+    <include file="$(find orbslam-ros)/launch/intergrated.launch">
+    </include>
+  
+    <!-- Include node2.launch -->
+    <include file="$(find pcd2pgm)/launch/octomap.launch">
+    </include>
+
+
+</launch>
