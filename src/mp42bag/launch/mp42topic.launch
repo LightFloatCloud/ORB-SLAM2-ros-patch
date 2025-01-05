@@ -3,6 +3,7 @@
     <!--arg name="video_path" default="/data/test0229.mp4"/-->
     <arg name="video_path" default="/mnt/d/WslSystem/share/dataset/rgbd_dataset_freiburg2_pioneer_slam2.mp4"/>
     <arg name="info_show" default="true"/>
+    <arg name="start_time" default="0.0"/> <!-- 新增：起始时间参数 -->
 
     <node pkg="mp42bag" type="mp42topic_node" name="mp42topic" output="screen">
         <!--param name="path_mp4" value="/mnt/d/WslSystem/sharefiles/video90/newfiles/calimp4.mp4"/-->
@@ -14,6 +15,7 @@
         <param name="Bool_restart" value="false"/>
         <param name="Bool_Info_show" value="$(arg info_show)"/>
         <param name="Output_FrameRate" value="30.0"/>
+        <param name="start_time" value="$(arg start_time)"/> <!-- 新增：起始时间参数 -->
     </node>
 </launch>
 

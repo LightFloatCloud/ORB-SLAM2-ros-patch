@@ -23,6 +23,7 @@
 
     <include file="$(find mp42bag)/launch/mp42topic.launch">
         <arg name="video_path" value="/mnt/d/WslSystem/share/dataset/$(arg dataname).mp4"/>
+        <arg name="start_time" value="0.0"/>
         <arg name="info_show" value="false"/>
     </include>
 

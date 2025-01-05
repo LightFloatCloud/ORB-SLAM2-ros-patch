@@ -20,7 +20,7 @@
     </include>
 
     <!-- Start rosbag play -->
-    <node name="rosbag_play" pkg="rosbag" type="play" args="--clock --start=5 /mnt/d/WslSystem/share/dataset/$(arg dataname).bag"/>
+    <node name="rosbag_play" pkg="rosbag" type="play" args="--start=5 /mnt/d/WslSystem/share/dataset/$(arg dataname).bag"/>
 
   
     <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" /-->
