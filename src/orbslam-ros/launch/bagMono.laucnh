@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="dataname" value="kitti_2011_09_26_drive_0005_synced"/>
+    <!-- V1_01_easy -->
+    <!-- V2_01_easy -->
+    <!-- rgbd_dataset_freiburg1_floor -->
+    <!-- rgbd_dataset_freiburg2_pioneer_slam -->
+    <!-- office -->
+    <!-- library_front -->
+    <!-- library_hall -->
+    <!-- library_passageway -->
+    <!-- calib_narrowGamma_scene1 -->
+    <!-- kitti_2011_09_26_drive_0093_synced -->
+
+    <!-- Include node1.launch -->
+    <include file="$(find orbslam-ros)/launch/Mono.launch">
+        <arg name="path_to_settings" value="/mnt/d/WslSystem/share/dataset/config/$(arg dataname).yaml"/>
+        <arg name="path_to_output" value="/mnt/d/WslSystem/share/dataset/output/$(arg dataname)/"/>
+        <arg name="Mono_image_topic" value="/kitti/camera_color_left/image_raw"/>
+    </include>
+
+    <!-- Start rosbag play -->
+    <node name="rosbag_play" pkg="rosbag" type="play" args="--clock --start=5 /mnt/d/WslSystem/share/dataset/$(arg dataname).bag"/>
+
+  
+    <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find pcd2pgm)/rviz_config.rviz" /-->
+
+
+</launch>
