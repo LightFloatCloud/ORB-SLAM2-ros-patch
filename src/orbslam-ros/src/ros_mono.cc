@@ -290,25 +290,44 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     // static const float scale = 0.9 / norm(Pn0);
     // cout << "-- scale: " << scale << endl;; // 当前缩放尺度
 
-    auto msg = PreparePointCloud2Message("camera", all_points.size());
-    ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
 
 
-    for (const auto &temp_point : all_points) 
+    // 使用临时容器存储满足条件的点
+    std::vector<ORB_SLAM2::MapPoint*> valid_points;
+    valid_points.reserve(all_points.size());
+
+    for (const auto &temp_point : all_points)
     {
-        // && !temp_point->mbGround
-        // TODO 别再发000点了
-        if(temp_point && !temp_point->isBad() && !temp_point->mbGround && temp_point->Observations()>= 4) {
-            cv::Mat new_point;
-            vconcat(temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
-            // new_point = R.t() * (T_inv * new_point);
-            new_point =  pSLAM->mpTracker->mCurrentFrame.mTcw * new_point;
-
-            stream.next(new_point.at<float>(0));
-            stream.next(new_point.at<float>(1));
-            stream.next(new_point.at<float>(2));
+        if (temp_point && !temp_point->isBad() && !temp_point->mbGround && temp_point->Observations() >= 4)
+        {
+            valid_points.push_back(temp_point);
         }
     }
+    int actual_num_points = valid_points.size();
+    if (actual_num_points == 0)
+        return;
+
+    // 使用向量收集点数据
+    std::vector<float> points_data;
+    points_data.reserve(actual_num_points * 3); // 预分配空间
+
+    for (const auto &temp_point : valid_points) 
+    {
+        cv::Mat new_point;
+        vconcat(temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
+        // new_point = R.t() * (T_inv * new_point);
+        new_point =  pSLAM->mpTracker->mCurrentFrame.mTcw * new_point;
+
+        // stream.next(new_point.at<float>(0));
+        // stream.next(new_point.at<float>(1));
+        // stream.next(new_point.at<float>(2));
+        points_data.push_back(new_point.at<float>(0)); // x
+        points_data.push_back(new_point.at<float>(1)); // y
+        points_data.push_back(new_point.at<float>(2)); // z
+    }
+    // 将向量数据赋值给 msg.data
+    auto msg = PreparePointCloud2Message("camera", actual_num_points);
+    std::copy(points_data.begin(), points_data.end(), reinterpret_cast<float*>(msg.data.data()));
     pub.publish(msg);
 
 

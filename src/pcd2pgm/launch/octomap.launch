@@ -5,22 +5,29 @@
         <!-- name of the fixed frame, needs to be "/map" for SLAM -->
         <param name="frame_id" type="string" value="map" />
         <!-- max range / depth resolution of the kinect in meter -->
-        <param name="sensor_model/max_range" value="20.0"/>
+        <param name="sensor_model/max_range" value="10.0"/>
         <!-- 新的订阅者只有在有新消息发布时才会收到消息,适用于动态更新的数据 -->
         <param name="latch" value="false" /> 
         <!-- max/min height for occupancy map, should be in meters -->
-        <param name="pointcloud_max_z" value="0.6" />
+        <param name="pointcloud_max_z" value="0.47" />
         <param name="pointcloud_min_z" value="0.10" />
-        <!--<param name="filter_ground" value="true" />-->
+
+        <!-- <param name="filter_ground" value="true" /> -->
         <!--<param name="ground_filter/distance" value="1"/-->
         <!-- topic from where pointcloud2 messages are subscribed -->
         <remap from="cloud_in" to="/points" />
 
 
-        <param name="sensor_model/hit" value="0.7" />
+        <param name="sensor_model/hit" value="0.9" />
         <param name="sensor_model/miss" value="0.4" />
         <!-- <param name="sensor_model/min" value="0.40" /> -->
         <!-- <param name="sensor_model/max" value="0.50" /> -->
+
+        <!-- <param name="occupancy_thres" value="0.5" /> -->
+        <!-- <param name="free_thres" value="0.5" /> -->
+
+        <!-- <param name="clamping_thres_min" value="0.12" /> -->
+        <!-- <param name="clamping_thres_max" value="0.97" /> -->
 
     </node>
 
