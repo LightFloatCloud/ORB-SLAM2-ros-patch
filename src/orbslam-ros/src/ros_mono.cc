@@ -328,7 +328,7 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     // 将向量数据赋值给 msg.data
     auto msg = PreparePointCloud2Message("camera", actual_num_points);
     std::copy(points_data.begin(), points_data.end(), reinterpret_cast<float*>(msg.data.data()));
-    pub.publish(msg);
+    // pub.publish(msg);
 
 
 
@@ -351,6 +351,8 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 
     // 广播变换
     tf_broadcaster.sendTransform(transform_stamped);
+
+    pub.publish(msg);
 
 }
 
