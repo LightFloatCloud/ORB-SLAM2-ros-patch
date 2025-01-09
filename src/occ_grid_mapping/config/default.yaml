@@ -1,12 +1,12 @@
 
-map_image_save_dir: /root/occ_map/map.png
-map_config_save_dir: /root/occ_map/map.yaml
+map_image_save_dir: /root/catkin_ws/src/occ_grid_mapping/map.png
+map_config_save_dir: /root/catkin_ws/src/occ_grid_mapping/map.yaml
 
 map:
-  sizex: 300
-  sizey: 300
-  initx: 150
-  inity: 150
+  sizex: 600
+  sizey: 600
+  initx: 300
+  inity: 300
   cell_size: 0.05
   # frame_id: odom
   
@@ -16,6 +16,6 @@ robot_laser:
   theta: 0.0
 
 sensor_model:
-  P_occ: 0.7
+  P_occ: 0.8
   P_free: 0.4
   P_prior: 0.5

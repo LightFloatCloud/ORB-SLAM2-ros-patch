@@ -5,7 +5,10 @@
     </include>
   
     <!-- Include node2.launch -->
-    <include file="$(find pcd2pgm)/launch/octomap.launch">
+    <!-- <include file="$(find pcd2pgm)/launch/octomap.launch">
+    </include> -->
+
+    <include file="$(find occ_grid_mapping)/launch/mapping.launch">
     </include>
 
 

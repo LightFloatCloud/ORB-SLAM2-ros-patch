@@ -108,9 +108,9 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
     g_gmapper->updateMap(cloud_msg, transform_map_camera);
 
     // 用 OpenCV 显示地图
-    cv::Mat map = g_map->toCvMat();
-    cv::imshow("map", map);
-    cv::waitKey(1);
+    // cv::Mat map = g_map->toCvMat();
+    // cv::imshow("map", map);
+    // cv::waitKey(1);
 
     // 发布地图
     nav_msgs::OccupancyGrid occ_map;
