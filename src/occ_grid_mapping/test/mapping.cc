@@ -89,15 +89,15 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         geometry_msgs::TransformStamped transform = g_tf_buffer->lookupTransform("map", "camera", ros::Time(0));
         transform_map_camera = transform.transform;
 
-        // 提取姿态（四元数）
-        geometry_msgs::Quaternion quat = transform.transform.rotation;
-        tf2::Quaternion tf_quat;
-        tf2::fromMsg(quat, tf_quat);
+        // // 提取姿态（四元数）
+        // geometry_msgs::Quaternion quat = transform.transform.rotation;
+        // tf2::Quaternion tf_quat;
+        // tf2::fromMsg(quat, tf_quat);
 
-        // 提取 camera 的 z 轴方向（在 map 坐标系下的方向）
-        tf2::Vector3 z_axis_camera = tf2::quatRotate(tf_quat, tf2::Vector3(0, 0, 1));
-        double theta = atan2(z_axis_camera.y(), z_axis_camera.x());
-        ROS_INFO("Current yaw angle (theta): %f radians", theta * 180.0 / M_PI);
+        // // 提取 camera 的 z 轴方向（在 map 坐标系下的方向）
+        // tf2::Vector3 z_axis_camera = tf2::quatRotate(tf_quat, tf2::Vector3(0, 0, 1));
+        // double theta = atan2(z_axis_camera.y(), z_axis_camera.x());
+        // ROS_INFO("Current yaw angle (theta): %f radians", theta * 180.0 / M_PI);
 
     } catch (tf2::TransformException& ex) {
         ROS_WARN("TF 变换异常: %s", ex.what());

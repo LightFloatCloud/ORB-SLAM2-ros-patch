@@ -206,8 +206,9 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     publish_pointcloud(mpSLAM);
     publish_Pose(mpSLAM);
     end_time = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "-- Publish cost: " << duration.count() << " ms." << std::endl;
+    // duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    std::chrono::duration<double, std::milli> duration2 = end_time - start_time;
+    std::cout << "-- Publish cost: " << duration2.count() << " ms." << std::endl;
 
 
     std::cout << std::endl;
