@@ -29,7 +29,6 @@ private:
     int size_x_, size_y_, init_x_, init_y_;
     double cell_size_;
     Eigen::MatrixXd bel_data_;
-    Eigen::MatrixXd m_one_, m_show_;
     
 };// class GridMap
 

@@ -36,21 +36,19 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
 
 
     // 定义激光扫描的参数
-    const double angle_min = -M_PI / 180 * 35.2;  // 最小角度    -35.2
-    const double angle_max = M_PI / 180 * 35.2;   // 最大角度     35.2
-    const double angle_increment = M_PI / 180.0 * 1;  // 角度增量（1度）  一个像素[0.12]
+    // const double angle_min = -M_PI / 180 * 35.2;  // 最小角度    -35.2
+    // const double angle_max = M_PI / 180 * 35.2;   // 最大角度     35.2
+    // const double angle_increment = M_PI / 180.0 * 1;  // 角度增量（1度）  一个像素[0.12]
     const double range_min = 0.1;    // 最小距离
     const double range_max = 10.0;   // 最大距离
     const double z_max = camera_z * 1.25;        // 最大高度阈值
     
-            
-
-
-    // 计算激光束的数量
-    size_t num_beams = std::ceil((angle_max - angle_min) / angle_increment);
-    // 初始化每个激光束的最小距离
-    std::vector<double> ranges(num_beams, std::numeric_limits<double>::infinity());
-
+    // 初始化 angle_min 和 angle_max
+    double angle_min = std::numeric_limits<double>::max();
+    double angle_max = std::numeric_limits<double>::lowest();
+    
+    // 存储每个点的 relative_angle 和 range
+    std::vector<std::pair<double, double>> point_data;
 
     // 使用 PointCloud2Iterator 遍历点云
     sensor_msgs::PointCloud2ConstIterator<float> iter_x(*cloud_msg, "x");
@@ -82,14 +80,32 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
         double point_angle = atan2(y_relative, x_relative);
         double relative_angle = point_angle - camera_heading_angle;
         relative_angle = atan2(sin(relative_angle), cos(relative_angle)); // 将角度映射到[-pi, pi]
+
+        // 更新 angle_min 和 angle_max
+        angle_min = std::min(angle_min, relative_angle);
+        angle_max = std::max(angle_max, relative_angle);
+
         // 计算点的距离
         double range = hypot(x_relative, y_relative);
 
         // 过滤无效点
-        if (range < range_min || range > range_max || relative_angle < angle_min || relative_angle > angle_max) {
-            ROS_WARN("relative_angle: %.3f, range: %.3f", relative_angle, range);
+        if (range < range_min || range > range_max) {
+            ROS_WARN("relative_angle: %.3f, range: %.3f", relative_angle / PI * 180, range);
             continue;
         }
+
+        // 存储 relative_angle 和 range
+        point_data.emplace_back(relative_angle, range);
+    }
+
+    // 计算激光束的数量和角度增量
+    const double angle_increment = M_PI / 180.0 * 1;  // 角度增量（1度）  一个像素[0.12]
+    size_t num_beams = std::ceil((angle_max - angle_min) / angle_increment);
+    // 初始化每个激光束的最小距离
+    std::vector<double> ranges(num_beams, std::numeric_limits<double>::infinity());
+
+    // 遍历存储的点数据以更新 ranges
+    for (const auto& [relative_angle, range] : point_data) {
         // 找到对应的激光束索引
         int index = static_cast<int>((relative_angle - angle_min) / angle_increment);
         if (index < 0 || index >= num_beams) {
@@ -100,11 +116,6 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
             ranges[index] = range;
         }
     }
-        
-        // // 将点云数据转换到世界坐标系
-        // Eigen::Vector2d p_relative(x_relative, y_relative);  // camera投影下的坐标
-        // // 计算点到相机的距离
-        // double R = p_relative.norm();  
     
     // 遍历每个激光束，更新地图
     for (size_t i = 0; i < num_beams; ++i) {

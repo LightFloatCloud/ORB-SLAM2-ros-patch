@@ -9,11 +9,6 @@ GridMap::GridMap ( const int& size_x, const int& size_y, const int& init_x, cons
     bel_data_.resize ( size_x_, size_y_ );
     bel_data_.setOnes() *= 0.5; //全部设为0.5的概率
     
-    /* 为opencv图片显示相关 */
-    m_one_.resize(size_x_, size_y_);
-    m_one_.setOnes();
-    m_show_.resize(size_x_, size_y_);
-    m_show_.setOnes() * 0.5;
 }
 
 bool GridMap::getIdx ( const double& x, const double& y, Eigen::Vector2i& idx )
@@ -58,8 +53,10 @@ bool GridMap::getGridLogBel ( const double& x, const double& y, double& log_bel 
 bool GridMap::setGridLogBel ( const double& x, const double& y, const double& log_bel )
 {
     double bel = 1.0 - 1.0 / (1 + exp(log_bel));
-    if( !setGridBel(x, y, bel) )
+    if (!setGridBel(x, y, bel)) {
+        std::cerr << "Failed to set grid belief at (" << x << ", " << y << ")" << std::endl;
         return false;
+    }
     return true;
 }
 
@@ -70,38 +67,63 @@ double GridMap::getCellSize()
 
 cv::Mat GridMap::toCvMat()
 {
-   /* 构造opencv mat */
-    m_show_ = m_one_ - bel_data_; //翻转数值
-    /* 构造出opencv格式显示 */
-    cv::Mat map(cv::Size(size_x_, size_y_), CV_64FC1, m_show_.data(), cv::Mat::AUTO_STEP); 
-   /* 翻转 */
-   cv::flip(map, map, 0);
-   
-   return map;
+    /* 构造opencv mat */
+    cv::Mat map(cv::Size(size_x_, size_y_), CV_64FC1);
+    
+    // 使用指针访问数据，提高访问速度
+    double* map_ptr = map.ptr<double>(0);
+    const double* bel_data_ptr = bel_data_.data();
+
+    for (int i = 0; i < size_x_ * size_y_; ++i) {
+        map_ptr[i] = 1.0 - bel_data_ptr[i]; // 翻转数值
+    }
+
+    /* 翻转 */
+    cv::flip(map, map, 0);
+
+    return map;
 }
 
-void GridMap::toRosOccGridMap( const std::string& frame_id, nav_msgs::OccupancyGrid& occ_grid)
+
+void GridMap::toRosOccGridMap(const std::string& frame_id, nav_msgs::OccupancyGrid& occ_grid)
 {
+    // 设置头信息
     occ_grid.header.frame_id = frame_id;
     occ_grid.header.stamp = ros::Time::now();
-    
+
+    // 设置地图信息
     occ_grid.info.width = size_x_;
     occ_grid.info.height = size_y_;
     occ_grid.info.resolution = cell_size_;
-     occ_grid.info.origin.position.x = -init_x_*cell_size_;
-     occ_grid.info.origin.position.y = -init_y_*cell_size_;
-    
-     const int N = size_x_ * size_y_;
-    for(size_t i= 0; i < N; i ++)
-    {
-        double& value = bel_data_.data()[i];
-        if(value == 0.5)
-            occ_grid.data.push_back( -1);
-        else
-            occ_grid.data.push_back( value * 100);
+    occ_grid.info.origin.position.x = -init_x_ * cell_size_;
+    occ_grid.info.origin.position.y = -init_y_ * cell_size_;
+
+    // 获取网格总数
+    const int N = size_x_ * size_y_;
+
+    // 确保 bel_data_.data() 的大小与预期一致
+    if (N != static_cast<int>(bel_data_.size())) {
+        throw std::runtime_error("Size mismatch between grid and belief data");
+    }
+
+    // 清空 occ_grid.data 并预分配内存
+    occ_grid.data.clear();
+    occ_grid.data.reserve(N);
+
+    // 定义一个小的容差值用于浮点数比较
+    const double epsilon = 1e-6;
+
+    // 预先将所有值设为 -1
+    occ_grid.data.assign(N, -1);
+
+    // 填充 occupancy grid 数据
+    for (size_t i = 0; i < N; ++i) {
+        double value = bel_data_.data()[i];
+        if (std::abs(value - 0.5) >= epsilon) {
+            occ_grid.data[i] = static_cast<int8_t>(value * 100);
+        }
     }
 }
-
 
 void GridMap::saveMap ( const std::string& img_dir, const std::string& cfg_dir )
 {
