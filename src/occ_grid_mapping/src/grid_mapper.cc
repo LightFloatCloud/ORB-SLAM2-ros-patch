@@ -12,6 +12,54 @@ map_(map), T_r_l_(T_r_l), P_occ_(P_occ), P_free_(P_free), P_prior_(P_prior)
     
 }
 
+std::vector<std::pair<Eigen::Vector2i, double>> AmanatidesWoo(
+    const Eigen::Vector2d& start, const Eigen::Vector2d& end, double cell_size, Eigen::Vector2i& last_cell)
+{
+    std::vector<std::pair<Eigen::Vector2i, double>> crossedCells;
+    Eigen::Vector2d direction = end - start;
+    double length = direction.norm(); // 射线的总长度
+    if (length == 0) return crossedCells;
+
+    direction.normalize(); // 归一化方向向量
+    int step_x = (direction.x() >= 0) ? 1 : -1;
+    int step_y = (direction.y() >= 0) ? 1 : -1;
+
+    Eigen::Vector2i current_cell = (start / cell_size).cast<int>();
+    double t_max_x = (step_x > 0)
+        ? (std::ceil(start.x() / cell_size) * cell_size - start.x()) / direction.x()
+        : (start.x() - std::floor(start.x() / cell_size) * cell_size) / (-direction.x());
+    double t_max_y = (step_y > 0)
+        ? (std::ceil(start.y() / cell_size) * cell_size - start.y()) / direction.y()
+        : (start.y() - std::floor(start.y() / cell_size) * cell_size) / (-direction.y());
+
+    double delta_t_x = (step_x > 0)
+        ? cell_size / direction.x()
+        : cell_size / (-direction.x());
+    double delta_t_y = (step_y > 0)
+        ? cell_size / direction.y()
+        : cell_size / (-direction.y());
+
+    double t = 0.0;
+    while (t < length)
+    {
+        crossedCells.emplace_back(current_cell, std::min(t_max_x, t_max_y) - t);
+        if (t_max_x < t_max_y)
+        {
+            t = t_max_x;
+            t_max_x += delta_t_x;
+            current_cell.x() += step_x;
+        }
+        else
+        {
+            t = t_max_y;
+            t_max_y += delta_t_y;
+            current_cell.y() += step_y;
+        }
+    }
+    // 返回最后一个栅格
+    last_cell = current_cell;
+    return crossedCells;
+}
 void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, geometry_msgs::Transform& transform) 
 {
 
@@ -132,45 +180,41 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
         double cangle = cos(beam_angle_global);
         double sangle = sin(beam_angle_global);
 
-        // 沿着激光射线更新地图
-        Eigen::Vector2d last_grid(Eigen::Infinity, Eigen::Infinity);  // 上一步更新的 grid 位置
-        for (double r = 0; r < R + cell_size; r += inc_step) {
-            Eigen::Vector2d p_l(
-                r * cangle,
-                r * sangle
-            );  // 在相机投影坐标系下的坐标
+        Eigen::Vector2d p_w = Eigen::Vector2d(camera_x, camera_y) + R * Eigen::Vector2d(cangle, sangle);
 
+        // 获取穿过的栅格和长度
+        Eigen::Vector2i last_cell;
+        std::vector<std::pair<Eigen::Vector2i, double>> crossedCells =
+            AmanatidesWoo(Eigen::Vector2d(camera_x, camera_y), p_w, cell_size, last_cell);
 
-            // 转换到世界坐标系
-            Eigen::Vector2d p_w = Eigen::Vector2d(camera_x, camera_y) + p_l;
-
-            // 避免重复更新
-            if (p_w == last_grid) continue;
-
-            // 更新栅格
-            updateGrid(p_w, laserInvModel(r, R, cell_size));
-
-            last_grid = p_w;
+        for (const auto& cell : crossedCells)
+        {
+            double pmzx = laserInvModel(cell.second, R, cell_size);
+            updateGrid(cell.first.cast<double>() * cell_size, pmzx, cell.second / cell_size);
         }
+        // 更新最后一个栅格为占据状态
+        double r = (last_cell.cast<double>() * cell_size - Eigen::Vector2d(camera_x, camera_y) ).norm();
+        updateGrid(last_cell.cast<double>() * cell_size, laserInvModel(r, R, cell_size), 1.0);
     }
 }
 
-void GridMapper::updateGrid ( const Eigen::Vector2d& grid, const double& pmzx )
+void GridMapper::updateGrid(const Eigen::Vector2d& grid, const double& pmzx, const double& unit)
 {
-    /* TODO 这个过程写的太低效了 */
     double log_bel;
-    if(  ! map_->getGridLogBel( grid(0), grid(1), log_bel )  ) //获取log的bel
+    if (!map_->getGridLogBel(grid(0), grid(1), log_bel))
         return;
-    log_bel += log( pmzx / (1.0 - pmzx) ); //更新
-    map_->setGridLogBel( grid(0), grid(1), log_bel  ); //设置回地图
+    // std::cout << "unit: " << unit << std::endl;
+    double log_odds = log(pmzx / (1.0 - pmzx)) * unit;
+    log_bel += log_odds;
+    map_->setGridLogBel(grid(0), grid(1), log_bel);
 }
 
 double GridMapper::laserInvModel ( const double& r, const double& R, const double& cell_size )
 {
-    if(r < ( R - 0.5*cell_size) )
+    if(r < ( R - 1*cell_size) )
         return P_free_;
     
-    if(r > ( R + 0.5*cell_size) )
+    if(r > ( R + 1*cell_size) )
         return P_prior_;
     
     return P_occ_;
