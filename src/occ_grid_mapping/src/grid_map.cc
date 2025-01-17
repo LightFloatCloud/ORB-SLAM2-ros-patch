@@ -3,11 +3,12 @@
 
 #include <occ_grid_mapping/grid_map.h>
 
-GridMap::GridMap ( const int& size_x, const int& size_y, const int& init_x, const int& init_y, const double& cell_size ) :
+GridMap::GridMap ( const int& size_x, const int& size_y, const int& init_x, const int& init_y, const double& cell_size , const double& init_bel ) :
     size_x_ ( size_x ), size_y_ ( size_y ), init_x_ ( init_x ), init_y_ ( init_y ), cell_size_ ( cell_size )
 {
     bel_data_.resize ( size_x_, size_y_ );
-    bel_data_.setOnes() *= 0.5; //全部设为0.5的概率
+    // bel_data_.setOnes() *= init_bel; //全部设为0.5的概率
+    bel_data_.setConstant(init_bel); // 直接设置所有元素为 init_bel
     
 }
 

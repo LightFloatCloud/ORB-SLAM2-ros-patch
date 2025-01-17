@@ -57,7 +57,7 @@ int main ( int argc, char **argv )
     nh.getParam ( "/mapping/map_config_save_dir", map_config_save_dir );
 
     /***** 初始化地图和构图器 *****/
-    g_map = new GridMap ( map_sizex, map_sizey,  map_initx, map_inity, map_cell_size );
+    g_map = new GridMap ( map_sizex, map_sizey,  map_initx, map_inity, map_cell_size, P_prior);
     g_gmapper = new GridMapper ( g_map, T_r_l, P_occ, P_free, P_prior );
 
     
