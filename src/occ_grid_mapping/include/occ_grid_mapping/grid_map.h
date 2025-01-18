@@ -11,10 +11,16 @@
 class GridMap{
 public:
     GridMap(const int& size_x, const int& size_y, const int& init_x, const int& init_y, const double& cell_size, const double& init_bel = 0.5);
-    bool setGridBel(const double& x, const double& y, const double& bel);
-    bool getGridBel ( const double& x, const double& y, double& bel);
-    bool setGridLogBel(const double& x, const double& y, const double& log_bel);
-    bool getGridLogBel(const double& x, const double& y, double& log_bel);
+    // Template functions
+    template <typename T>
+    bool getGridBel(const T& x, const T& y, double& bel);
+    template <typename T>
+    bool setGridBel(const T& x, const T& y, const double& bel);
+    template <typename T>
+    bool getGridLogBel(const T& x, const T& y, double& log_bel);
+    template <typename T>
+    bool setGridLogBel(const T& x, const T& y, const double& log_bel);
+    
     double getCellSize();
    
     void toRosOccGridMap(const std::string& frame_id, nav_msgs::OccupancyGrid& occ_grid); //转换到Ros栅格地图的消息
@@ -24,6 +30,7 @@ public:
     
 private:
     bool getIdx(const double& x, const double& y, Eigen::Vector2i& idx);
+    bool getIdx(const int& x, const int& y, Eigen::Vector2i& idx);
     
 private:
     int size_x_, size_y_, init_x_, init_y_;

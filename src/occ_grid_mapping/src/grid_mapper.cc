@@ -189,16 +189,17 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
 
         for (const auto& cell : crossedCells)
         {
-            double pmzx = laserInvModel(cell.second, R, cell_size);
-            updateGrid(cell.first.cast<double>() * cell_size, pmzx, cell.second / cell_size);
+            // double pmzx = laserInvModel(cell.second, R, cell_size);
+            updateGrid(cell.first, P_free_, cell.second / cell_size);
         }
         // 更新最后一个栅格为占据状态
-        double r = (last_cell.cast<double>() * cell_size - Eigen::Vector2d(camera_x, camera_y) ).norm();
-        updateGrid(last_cell.cast<double>() * cell_size, laserInvModel(r, R, cell_size), 1.0);
+        // double r = (last_cell.cast<double>() * cell_size - Eigen::Vector2d(camera_x, camera_y) ).norm();
+        // updateGrid(last_cell.cast<double>() * cell_size, laserInvModel(r, R, cell_size), 1.0);
+        updateGrid(last_cell, P_occ_, 1.0);
     }
 }
 
-void GridMapper::updateGrid(const Eigen::Vector2d& grid, const double& pmzx, const double& unit)
+void GridMapper::updateGrid(const Eigen::Vector2i& grid, const double& pmzx, const double& unit)
 {
     double log_bel;
     if (!map_->getGridLogBel(grid(0), grid(1), log_bel))

@@ -16,7 +16,7 @@ class GridMapper{
 public:
     GridMapper(GridMap* map,  Pose2d& T_r_l,  double& P_occ, double& P_free, double& P_prior);
     void updateMap(const sensor_msgs::PointCloud2ConstPtr& cloud_msg, geometry_msgs::Transform& transform); //根据当前机器人的位姿和相机点云更新一次地图
-    void updateGrid(const Eigen::Vector2d& grid, const double& pmzx, const double& length);
+    void updateGrid(const Eigen::Vector2i& grid, const double& pmzx, const double& length);
     double laserInvModel(const double& r, const double& R, const double& cell_size);
     
 private:

@@ -23,8 +23,19 @@ bool GridMap::getIdx ( const double& x, const double& y, Eigen::Vector2i& idx )
     idx << xidx , yidx;
     return true;
 }
+bool GridMap::getIdx(const int& x, const int& y, Eigen::Vector2i& idx)
+{
+    int xidx = x + init_x_;
+    int yidx = y+ init_y_;
+    // TODO 动态扩张地图
+    if((xidx < 0) || (yidx < 0) || (xidx >= size_x_) || (yidx >= size_y_))
+        return false;
+    idx << xidx , yidx;
+    return true;
+}
 
-bool GridMap::getGridBel ( const double& x, const double& y, double& bel)
+template <typename T>
+bool GridMap::getGridBel ( const T& x, const T& y, double& bel)
 {
     Eigen::Vector2i idx;
     if(!getIdx(x, y, idx))
@@ -33,7 +44,8 @@ bool GridMap::getGridBel ( const double& x, const double& y, double& bel)
     return true;
 }
 
-bool GridMap::setGridBel ( const double& x, const double& y, const double& bel )
+template <typename T>
+bool GridMap::setGridBel ( const T& x, const T& y, const double& bel )
 {
     Eigen::Vector2i idx;
     if(!getIdx(x, y, idx))
@@ -42,7 +54,8 @@ bool GridMap::setGridBel ( const double& x, const double& y, const double& bel )
     return true;
 }
 
-bool GridMap::getGridLogBel ( const double& x, const double& y, double& log_bel )
+template <typename T>
+bool GridMap::getGridLogBel ( const T& x, const T& y, double& log_bel )
 {
     double bel;
     if(!getGridBel(x, y, bel))
@@ -51,7 +64,8 @@ bool GridMap::getGridLogBel ( const double& x, const double& y, double& log_bel 
     return true;
 }
 
-bool GridMap::setGridLogBel ( const double& x, const double& y, const double& log_bel )
+template <typename T>
+bool GridMap::setGridLogBel ( const T& x, const T& y, const double& log_bel )
 {
     double bel = 1.0 - 1.0 / (1 + exp(log_bel));
     if (!setGridBel(x, y, bel)) {
@@ -145,7 +159,16 @@ void GridMap::saveMap ( const std::string& img_dir, const std::string& cfg_dir )
 }
 
 
+// 显式实例化模板函数
+template bool GridMap::getGridBel<int>(const int&, const int&, double&);
+template bool GridMap::setGridBel<int>(const int&, const int&, const double&);
+template bool GridMap::getGridLogBel<int>(const int&, const int&, double&);
+template bool GridMap::setGridLogBel<int>(const int&, const int&, const double&);
 
+template bool GridMap::getGridBel<double>(const double&, const double&, double&);
+template bool GridMap::setGridBel<double>(const double&, const double&, const double&);
+template bool GridMap::getGridLogBel<double>(const double&, const double&, double&);
+template bool GridMap::setGridLogBel<double>(const double&, const double&, const double&);
 
 
 
