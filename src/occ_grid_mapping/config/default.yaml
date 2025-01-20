@@ -16,6 +16,6 @@ robot_laser:
   theta: 0.0
 
 sensor_model:
-  P_occ: 0.8
+  P_occ: 0.95
   P_free: 0.4
   P_prior: 0.5
