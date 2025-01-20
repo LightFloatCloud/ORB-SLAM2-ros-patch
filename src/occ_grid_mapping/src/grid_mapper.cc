@@ -24,7 +24,7 @@ std::vector<std::pair<Eigen::Vector2i, double>> AmanatidesWoo(
     int step_x = (direction.x() >= 0) ? 1 : -1;
     int step_y = (direction.y() >= 0) ? 1 : -1;
 
-    Eigen::Vector2i current_cell = (start / cell_size).cast<int>();
+    Eigen::Vector2i current_cell(cvFloor(start.x() / cell_size), cvFloor(start.y() / cell_size));
     double t_max_x = (step_x > 0)
         ? (std::ceil(start.x() / cell_size) * cell_size - start.x()) / direction.x()
         : (start.x() - std::floor(start.x() / cell_size) * cell_size) / (-direction.x());
@@ -192,10 +192,51 @@ void GridMapper::updateMap (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, g
             // double pmzx = laserInvModel(cell.second, R, cell_size);
             updateGrid(cell.first, P_free_, cell.second / cell_size);
         }
-        // 更新最后一个栅格为占据状态
-        // double r = (last_cell.cast<double>() * cell_size - Eigen::Vector2d(camera_x, camera_y) ).norm();
-        // updateGrid(last_cell.cast<double>() * cell_size, laserInvModel(r, R, cell_size), 1.0);
-        updateGrid(last_cell, P_occ_, 1.0);
+        
+        // 更新最后一个栅格为占据状态        
+        if(R <= 2) {
+            updateGrid(last_cell, P_occ_, 1.0);
+            continue;
+        } 
+        // 高斯分布更新
+        // 2m 对应 1grid(0.05 m) = 2标准差
+        const double sigma = R * (cell_size/2 / 2.0); // 高斯分布的标准差
+        const double two_sigma = 2.0 * sigma; // 2 个标准差的范围
+
+        // 计算圆的边界
+        double x_min = p_w.x() - two_sigma;
+        double x_max = p_w.x() + two_sigma;
+        double y_min = p_w.y() - two_sigma;
+        double y_max = p_w.y() + two_sigma;
+        // 获取 p_w 所在的栅格坐标
+        Eigen::Vector2i p_w_cell(cvFloor(p_w.x() / cell_size), cvFloor(p_w.y() / cell_size));
+
+        // 计算需要遍历的栅格范围
+        int x_min_cell = cvRound(x_min / cell_size);
+        int x_max_cell = cvRound(x_max / cell_size);
+        int y_min_cell = cvRound(y_min / cell_size);
+        int y_max_cell = cvRound(y_max / cell_size);
+        
+        // 遍历可能被圆覆盖的栅格
+        for (int x = x_min_cell; x <= x_max_cell; ++x) {
+            for (int y = y_min_cell; y <= y_max_cell; ++y) {
+                Eigen::Vector2i cell(x, y);
+
+                // 计算栅格中心点到 p_w 的距离
+                Eigen::Vector2d cell_center = cell.cast<double>() * cell_size + Eigen::Vector2d(cell_size / 2.0, cell_size / 2.0);
+                double distance = (cell_center - p_w).norm();
+
+                // 如果距离在 2 个标准差以内，则更新栅格
+                if (distance <= two_sigma) {
+                    // 计算高斯分布的概率体积
+                    double gaussian_value = std::exp(-0.5 * (distance * distance) / (sigma * sigma)) / (2 * M_PI * sigma * sigma);
+                    double volume = gaussian_value * cell_size * cell_size;
+                    // 更新栅格
+                    updateGrid(cell, P_occ_, volume);
+                }
+            }
+        }
+
     }
 }
 
