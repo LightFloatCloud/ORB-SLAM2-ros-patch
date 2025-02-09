@@ -40,6 +40,10 @@
 
 using namespace std;
 
+bool enable_scale_recovery = true; // 设置为 true 开启尺度恢复，false 关闭
+double scale_factor = 1.0; // 尺度因子，默认为 1.0
+double h_init_true;
+
 int frame_num = 0;
 ros::Publisher pub;
 
@@ -75,7 +79,7 @@ int main(int argc, char **argv)
     string path_to_vocabulary_, path_to_settings_;
     nodeHandler.param<string>("path_to_vocabulary", path_to_vocabulary_, "ORBvoc.txt");
     nodeHandler.param<string>("path_to_settings", path_to_settings_, "Monocular/settings.yaml");
-
+    nodeHandler.param<double>("h_init_true", h_init_true, 0.8);
     /*
     if(argc != 3)
     {
@@ -89,36 +93,8 @@ int main(int argc, char **argv)
 
     ImageGrabber igb(&SLAM);
 
-
-
-
     ros::Subscriber sub = nodeHandler.subscribe(Mono_image_topic_, 1, &ImageGrabber::GrabImage, &igb);
     pub = nodeHandler.advertise<sensor_msgs::PointCloud2>("/points", 1);
-
-
-
-    // int last_frame_num = frame_num;
-
-// pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
-
-    // while (ros::ok()) {
-    //     // 执行ROS相关操作
-    //     if(last_frame_num != frame_num) {
-    //         last_frame_num = frame_num;
-            
-    //         std::cout << "Frame number: " << frame_num << std::endl;
-    //         std::cout << "-- Ground: " << SLAM.mpMap->mvGroundPlaneNormal << std::endl;
-
-    //         end_time = std::chrono::high_resolution_clock::now();
-    //         duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    //         start_time = end_time;
-    //         std::cout << "-- cost: " << duration.count() << " ms." << std::endl;
-        
-    //         publish_pointcloud(SLAM.mpMap->GetAllMapPoints());
-    //     }
-    //     // 一次性处理所有待处理的ROS事件
-    //     ros::spinOnce();
-    // }
 
     ros::spin();
 
@@ -256,6 +232,20 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 
     cv::Mat Normal = pSLAM->mpMap->mvGroundPlaneNormal;
 
+    static bool is_initialized = false;
+    static double h_init;
+
+    if (!is_initialized) {
+        h_init = 1.0 / norm(Normal);
+        scale_factor = h_init_true / h_init;
+        is_initialized = true;
+    }
+
+    // 如果尺度恢复功能关闭，则将尺度因子设为 1.0
+    if (!enable_scale_recovery) {
+        scale_factor = 1.0;
+    }
+
     cv::Mat P0 = (cv::Mat_<float>(3, 1) << 0, 0, 0);
     cv::Mat P1 = (cv::Mat_<float>(3, 1) << 0, 0, 1);
     // 计算投影点
@@ -308,6 +298,15 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     if (actual_num_points == 0)
         return;
 
+
+    // 获取当前帧的相机位姿
+    cv::Mat Tcw = pSLAM->mpTracker->mCurrentFrame.mTcw.clone(); // 当前帧的相机位姿
+    cv::Mat Twc = Tcw.inv(); // T_wc = T_cw^{-1}
+      cv::Mat Rwc = Twc.rowRange(0, 3).colRange(0, 3); 
+      cv::Mat twc = Twc.rowRange(0, 3).col(3); 
+      twc *= scale_factor;
+    Tcw = Twc.inv();
+
     // 使用向量收集点数据
     std::vector<float> points_data;
     points_data.reserve(actual_num_points * 3); // 预分配空间
@@ -315,9 +314,9 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     for (const auto &temp_point : valid_points) 
     {
         cv::Mat new_point;
-        vconcat(temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
+        vconcat(scale_factor * temp_point->GetWorldPos(), cv::Mat::ones(1, 1, CV_32F) , new_point);
         // new_point = R.t() * (T_inv * new_point);
-        new_point =  pSLAM->mpTracker->mCurrentFrame.mTcw * new_point;
+        new_point =  Tcw * new_point;
 
         // stream.next(new_point.at<float>(0));
         // stream.next(new_point.at<float>(1));
@@ -369,7 +368,7 @@ void publish_Pose(const ORB_SLAM2::System* pSLAM)
     ORB_SLAM2::Tracking* tracker = pSLAM->mpTracker;
     if (!tracker || tracker->mState != ORB_SLAM2::Tracking::OK)
         return;
-    cv::Mat t = tracker->mCurrentFrame.GetCameraCenter();
+    cv::Mat t = tracker->mCurrentFrame.GetCameraCenter() * scale_factor;
     cv::Mat R = tracker->mCurrentFrame.GetRotationInverse();
     
     //抽取旋转部分和平移部分，前者使用四元数表示

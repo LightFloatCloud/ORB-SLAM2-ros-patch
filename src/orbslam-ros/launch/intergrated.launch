@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="dataname" value="office"/>
+    <arg name="height" value="0.8"/>
+
     <!-- V1_01_easy -->
     <!-- V2_01_easy -->
     <!-- rgbd_dataset_freiburg1_floor -->
@@ -9,12 +11,14 @@
     <!-- library_front -->
     <!-- library_hall -->
     <!-- library_passageway -->
+    <!-- library_studyroom -->
     <!-- calib_narrowGamma_scene1 -->
 
     <!-- Include node1.launch -->
     <include file="$(find orbslam-ros)/launch/Mono.launch">
         <arg name="path_to_settings" value="/mnt/d/WslSystem/share/dataset/config/$(arg dataname).yaml"/>
         <arg name="path_to_output" value="/mnt/d/WslSystem/share/dataset/output/$(arg dataname)/"/>
+        <arg name="h_init_true" value="$(arg height)"/>
     </include>
   
     <!-- Include node2.launch -->
