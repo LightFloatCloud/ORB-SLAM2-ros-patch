@@ -3,10 +3,10 @@ map_image_save_dir: /root/catkin_ws/src/occ_grid_mapping/map.png
 map_config_save_dir: /root/catkin_ws/src/occ_grid_mapping/map.yaml
 
 map:
-  sizex: 600
-  sizey: 600
-  initx: 300
-  inity: 300
+  sizex: 2000
+  sizey: 2000
+  initx: 1000
+  inity: 1000
   cell_size: 0.05
   # frame_id: odom
   
@@ -17,5 +17,5 @@ robot_laser:
 
 sensor_model:
   P_occ: 0.95
-  P_free: 0.4
+  P_free: 0.45
   P_prior: 0.5
