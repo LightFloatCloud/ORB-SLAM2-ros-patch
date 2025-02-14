@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="dataname" value="office"/>
+    <arg name="dataname" value="sequence_12"/>
     <arg name="height" value="0.8"/>
 
     <!-- V1_01_easy -->
     <!-- V2_01_easy -->
     <!-- rgbd_dataset_freiburg1_floor -->
     <!-- rgbd_dataset_freiburg2_pioneer_slam -->
+    <!-- sequence_08 -->
     <!-- office -->
     <!-- library_front -->
     <!-- library_hall -->
