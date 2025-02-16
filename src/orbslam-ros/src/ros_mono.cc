@@ -40,7 +40,9 @@
 
 using namespace std;
 
+
 bool enable_scale_recovery = true; // 设置为 true 开启尺度恢复，false 关闭
+bool is_initialized = false;
 double scale_factor = 1.0; // 尺度因子，默认为 1.0
 double h_init_true;
 
@@ -179,8 +181,8 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
 
     start_time = std::chrono::high_resolution_clock::now();
+    if(is_initialized) {publish_Pose(mpSLAM);}
     publish_pointcloud(mpSLAM);
-    publish_Pose(mpSLAM);
     end_time = std::chrono::high_resolution_clock::now();
     // duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::chrono::duration<double, std::milli> duration2 = end_time - start_time;
@@ -232,13 +234,13 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
 
     cv::Mat Normal = pSLAM->mpMap->mvGroundPlaneNormal;
 
-    static bool is_initialized = false;
     static double h_init;
 
     if (!is_initialized) {
         h_init = 1.0 / norm(Normal);
         scale_factor = h_init_true / h_init;
         is_initialized = true;
+        std::cout << "h_init: " << h_init << " h_init_true: " << h_init_true << " scale_factor: " << scale_factor << std::endl;
     }
 
     // 如果尺度恢复功能关闭，则将尺度因子设为 1.0
@@ -261,7 +263,7 @@ void publish_pointcloud(const ORB_SLAM2::System* pSLAM)
     cv::Mat y_1 = z_1.cross(x_1);
 
     // 旋转矩阵 R
-    cv::Mat R(4, 4, CV_32F);
+    cv::Mat R = cv::Mat::eye(4, 4, CV_32F);
     x_1.copyTo(R.col(0).rowRange(0,3));
     y_1.copyTo(R.col(1).rowRange(0,3));
     z_1.copyTo(R.col(2).rowRange(0,3));
