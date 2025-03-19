@@ -139,12 +139,12 @@ int main ( int argc, char **argv )
 
 // PointCloud2 回调
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
-    geometry_msgs::Transform transform_map_camera;
+    // static geometry_msgs::Transform transform_map_camera;
     // TF 变换回调
     try {
         // 获取 camera 相对于 map 的变换
         geometry_msgs::TransformStamped transform = g_tf_buffer->lookupTransform("map", "camera", ros::Time(0));
-        transform_map_camera = transform.transform;
+        geometry_msgs::Transform transform_map_camera = transform.transform;
 
         
         // 提取时间戳和位姿
@@ -167,22 +167,19 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         // 更新 camera 轨迹
         updateCameraTrajectory(timestamp, pose);
 
+        
+        // 更新地图
+        g_gmapper->updateMap(cloud_msg, transform_map_camera);
+
+        // 发布地图
+        nav_msgs::OccupancyGrid occ_map;
+        g_map->toRosOccGridMap("map", occ_map);
+        g_map_puber.publish(occ_map);
+
+
 
     } catch (tf2::TransformException& ex) {
         ROS_WARN("TF 变换异常: %s", ex.what());
         return;  // 如果 TF 变换失败，直接返回
     }
-
-    // 更新地图
-    g_gmapper->updateMap(cloud_msg, transform_map_camera);
-
-    // 用 OpenCV 显示地图
-    // cv::Mat map = g_map->toCvMat();
-    // cv::imshow("map", map);
-    // cv::waitKey(1);
-
-    // 发布地图
-    nav_msgs::OccupancyGrid occ_map;
-    g_map->toRosOccGridMap("map", occ_map);
-    g_map_puber.publish(occ_map);
 }
